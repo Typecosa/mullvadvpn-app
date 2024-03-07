@@ -69,6 +69,9 @@ pub enum Error {
     #[cfg(target_os = "macos")]
     #[error("An error occurred: {0}")]
     Other(String),
+
+    #[error(transparent)]
+    Anyhow(#[from] anyhow::Error),
 }
 
 /// Get a list of all tests, sorted by priority.
