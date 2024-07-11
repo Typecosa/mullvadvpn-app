@@ -17,6 +17,8 @@ plugins {
 
     alias(libs.plugins.detekt) apply true
     alias(libs.plugins.dependency.versions) apply true
+
+    id(Dependencies.rustAndroid) version Versions.rustAndroid
 }
 
 buildscript {
@@ -67,8 +69,11 @@ buildscript {
         classpath("$prebuilt:linux-x86_64@tar.gz")
         classpath("$prebuilt:macos-aarch64@tar.gz")
         classpath("$prebuilt:macos-x86_64@tar.gz")
+
+        classpath("org.mozilla.rust-android-gradle:plugin:0.9.4")
     }
 }
+
 
 val baselineFile = file("$rootDir/config/baseline.xml")
 val configFile = files("$rootDir/config/detekt.yml")

@@ -7,4 +7,6 @@ object Versions {
     const val junitJupiter = "5.10.2"
     const val junit5Android = "1.5.0"
     const val junit5Plugin = "1.10.2.0"
+
+    const val rustAndroid = "0.9.4"
 }

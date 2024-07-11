@@ -1,7 +1,5 @@
 import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
-import com.android.build.gradle.internal.lint.LintModelWriterTask
 import com.android.build.gradle.internal.tasks.factory.dependsOn
-import com.android.build.gradle.tasks.MergeSourceSetFolders
 import java.io.FileInputStream
 import java.util.Properties
 import org.gradle.configurationcache.extensions.capitalized
@@ -15,6 +13,7 @@ plugins {
     alias(libs.plugins.compose)
 
     id(Dependencies.junit5AndroidPluginId) version Versions.junit5Plugin
+    id(Dependencies.rustAndroid)
 }
 
 val repoRootPath = rootProject.projectDir.absoluteFile.parentFile.absolutePath
@@ -77,7 +76,7 @@ android {
             isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
         create(BuildTypes.FDROID) {
@@ -144,7 +143,7 @@ android {
                 "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
                 "-opt-in=kotlinx.coroutines.ObsoleteCoroutinesApi",
                 // Opt-in option for Koin annotation of KoinComponent.
-                "-opt-in=kotlin.RequiresOptIn"
+                "-opt-in=kotlin.RequiresOptIn",
             )
     }
 
@@ -174,7 +173,7 @@ android {
                     "META-INF/LICENSE.md",
                     "META-INF/LICENSE-notice.md",
                     "META-INF/io.netty.versions.properties",
-                    "META-INF/INDEX.LIST"
+                    "META-INF/INDEX.LIST",
                 )
         }
     }
@@ -193,7 +192,7 @@ android {
         buildConfigField(
             "boolean",
             "ENABLE_IN_APP_VERSION_NOTIFICATIONS",
-            enableInAppVersionNotifications
+            enableInAppVersionNotifications,
         )
     }
 
@@ -243,6 +242,8 @@ android {
             dependsOn(tasks.get("ensureMaybenotMachinesExist"))
             dependsOn(tasks.get("ensureJniDirectoryExist"))
             dependsOn(tasks.get("ensureValidVersionCode"))
+
+            ndkVersion = "25.2.9519653"
         }
     }
 }
@@ -252,6 +253,16 @@ junitPlatform {
         version.set(Versions.junit5Android)
         includeExtensions.set(true)
     }
+}
+
+cargo {
+    module = "../" // Or whatever directory contains your Cargo.toml
+    libname = "mullvad-jni" // Or whatever matches Cargo.toml's [package] name.
+    targets = listOf("arm", "x86") // See bellow for a longer list of options
+    profile = "release"
+    prebuiltToolchains = true
+    verbose = true
+    //    targetDirectory = 'path/to/workspace/root/target'
 }
 
 composeCompiler { enableStrongSkippingMode = true }
