@@ -24,20 +24,17 @@ secure as possible with the limitations of the OS APIs.
 
 ### Android
 
-On Android, the only way an app can filter network traffic is essentially via the VPN service API.
-This API allows all traffic, except some [exempt by the system](#exempt-traffic), to and from the
-phone to flow though a third party app. This API is of course what the app uses for the tunnel
-itself as well, but apart from that it is also what the leak protection is built on.
+The only way an android app can filter network traffic is via the VPN service API. This API allows
+all traffic, except some [exempt by the system & known issues](#exempt-traffic--known-issues), to and from the phone to flow though a third party app. This API is what the app uses for the tunnel itself as well, but apart from that it is also what the leak protection is built on. This also means that all app are subject to the limitations of the API, and behaviour may be different between different version of Android.
 
 An app with permission to act as a VPN service can request to open a VPN tunnel on the device and
 provide a set of IP networks it would like to have routed via itself. Doing so and specifying
 the routes `0/0` and `::0/0` forces all traffic, except some
 [exempt by the system](#exempt-traffic), to go via the app. That is what this app does both when it
 has a VPN tunnel up, but also when in a state where it would like to block all network traffic. Such
-as the [connecting], [disconnecting] and [error] states. In these states, all outgoing packets are
-simply dropped, but incoming traffic is still allowed due to the limitations of Android.
+as the [connecting], [disconnecting] and [error] states.
 
-#### Exempt traffic
+#### Exempt traffic & Known Issues
 
 Even though not being properly documented by Google, some traffic is exempt by the system from using
 the VPN, which means that the traffic will leak and therefore potentially impact user privacy. This
@@ -49,6 +46,7 @@ The following issues have been reported by Mullvad in the Android issue tracker 
 documentation and user privacy:
 * [Incorrect VPN lockdown documentation](https://issuetracker.google.com/issues/249990229)
 * [Add option to disable connectivity checks when VPN lockdown is enabled](https://issuetracker.google.com/issues/250529027)
+* [VPN leaks DNS traffic outside the tunnel](https://issuetracker.google.com/issues/337961996)
 
 ### iOS
 
