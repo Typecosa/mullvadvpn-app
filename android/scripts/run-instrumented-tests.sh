@@ -2,9 +2,6 @@
 
 set -eu
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cd "$SCRIPT_DIR"
-
 AUTO_FETCH_TEST_HELPER_APKS=${AUTO_FETCH_TEST_HELPER_APKS:-"false"}
 
 APK_BASE_DIR=${APK_BASE_DIR:-"$SCRIPT_DIR/.."}
