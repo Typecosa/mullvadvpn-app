@@ -169,12 +169,13 @@ impl From<openvpn::TunnelParameters> for TunnelParameters {
 }
 
 /// The tunnel protocol used by a [`TunnelEndpoint`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 #[serde(rename = "tunnel_type")]
 pub enum TunnelType {
     #[serde(rename = "openvpn")]
     OpenVpn,
     #[serde(rename = "wireguard")]
+    #[default]
     Wireguard,
 }
 
@@ -208,7 +209,7 @@ pub struct TunnelTypeParseError;
 
 /// A tunnel endpoint is broadcast during the connecting and connected states of the tunnel state
 /// machine.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub struct TunnelEndpoint {
     #[serde(flatten)]
     pub endpoint: Endpoint,
@@ -311,6 +312,15 @@ pub struct Endpoint {
     pub address: SocketAddr,
     /// The protocol part of this endpoint.
     pub protocol: TransportProtocol,
+}
+
+impl Default for Endpoint {
+    fn default() -> Self {
+        Self {
+            address: SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080),
+            protocol: TransportProtocol::Udp,
+        }
+    }
 }
 
 impl Endpoint {
