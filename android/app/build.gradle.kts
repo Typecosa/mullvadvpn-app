@@ -1,6 +1,8 @@
 import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
 import com.android.build.gradle.internal.tasks.factory.dependsOn
+import java.io.ByteArrayOutputStream
 import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.util.Properties
 import org.gradle.configurationcache.extensions.capitalized
 
@@ -256,13 +258,74 @@ junitPlatform {
 }
 
 cargo {
-    module = "../" // Or whatever directory contains your Cargo.toml
-    libname = "mullvad-jni" // Or whatever matches Cargo.toml's [package] name.
-    targets = listOf("arm", "x86") // See bellow for a longer list of options
-    profile = "release"
+    module = repoRootPath
+    libname = "mullvad-jni"
+    targets = listOf("arm64") // listOf("arm", "arm64", "x86", "x86_64")
+    profile = "debug"
     prebuiltToolchains = true
-    verbose = true
-    //    targetDirectory = 'path/to/workspace/root/target'
+    // verbose = true
+    targetDirectory = extraJniDirectory
+    exec = { spec, toolchain -> spec.args = spec.args.apply { add("--package=mullvad-jni") } }
+}
+
+tasks.register<Copy>("moveJniLibs") {
+    val cargoBuild = this.dependsOn("cargoBuild")
+    println("What the fuck!")
+    println(cargoBuild)
+    println(cargo.targets)
+    println(cargo.cargoCommand)
+    val fromFiles =
+        cargo.targets?.map { target ->
+            val abi =
+                when (target) {
+                    "arm" -> "armv7-linux-androideabi"
+                    "arm64" -> "aarch64-linux-android"
+                    "x86" -> "i686-linux-android"
+                    "x86_64" -> "x86_64-linux-android"
+                    else -> error("Unknown target: $target")
+                }
+            "$repoRootPath/target/$abi/debug"
+        } ?: emptyList()
+    println(fromFiles.toTypedArray().contentToString())
+    from(fromFiles.toTypedArray())
+    into("$extraJniDirectory")
+    include { it.name.endsWith(".so") }
+    eachFile {
+        if (this.sourcePath.contains("armv7-linux-androideabi")) {
+            this.relativePath = RelativePath(false, "arm64-v8a", this.relativePath.pathString)
+        }
+        println("Moving $name $relativePath $sourcePath $relativeSourcePath")
+    }
+}
+
+tasks.register<Exec>("generateRelayList") {
+    workingDir = File(repoRootPath)
+    standardOutput = ByteArrayOutputStream()
+
+    commandLine("cargo", "run", "--bin", "relay_list")
+
+    dependsOn("createRelayFile")
+
+    doLast {
+        val output = standardOutput as ByteArrayOutputStream
+        FileOutputStream("$extraAssetsDirectory/relays.json").use { it.write(output.toByteArray()) }
+    }
+}
+
+tasks.register<Exec>("createExtraAssetsFolder") {
+    workingDir = File("${rootProject.projectDir}")
+
+    commandLine("mkdir", "-p", extraAssetsDirectory)
+
+    dependsOn("moveJniLibs")
+}
+
+tasks.register<Exec>("createRelayFile") {
+    workingDir = File(extraAssetsDirectory)
+
+    commandLine("touch", "relays.json")
+
+    dependsOn("createExtraAssetsFolder")
 }
 
 composeCompiler { enableStrongSkippingMode = true }
@@ -294,6 +357,7 @@ tasks.register("ensureRelayListExist") {
             throw GradleException("Missing relay list: $relayListPath")
         }
     }
+    dependsOn("generateRelayList")
 }
 
 tasks.register("ensureMaybenotMachinesExist") {
@@ -310,6 +374,7 @@ tasks.register("ensureJniDirectoryExist") {
             throw GradleException("Missing JNI directory: $extraJniDirectory")
         }
     }
+    dependsOn("moveJniLibs")
 }
 
 // This is a safety net to avoid generating too big version codes, since that could potentially be
