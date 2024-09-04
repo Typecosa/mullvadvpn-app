@@ -1,4 +1,6 @@
 ---
 Language: Proto
 ColumnLimit: 100
+---
+Language: Cpp
 ...

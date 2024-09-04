@@ -3,6 +3,8 @@
 #include <winfw/mullvadguids.h>
 #include <libwfp/filterbuilder.h>
 #include <libwfp/nullconditionbuilder.h>
+#include <libwfp/conditionbuilder.h>
+#include <fwpmu.h>
 
 namespace rules::baseline
 {
@@ -69,7 +71,28 @@ bool BlockAll::apply(IObjectInstaller &objectInstaller)
 		.name(L"Block all inbound connections (IPv6)")
 		.layer(FWPM_LAYER_ALE_AUTH_RECV_ACCEPT_V6);
 
-	return objectInstaller.addFilter(filterBuilder, nullConditionBuilder);
+
+
+	if (false == objectInstaller.addFilter(filterBuilder, nullConditionBuilder))
+	{
+		return false;
+	}
+
+
+	wfp::FilterBuilder filterBuilder2;
+	wfp::ConditionBuilder conditionBuilder(FWPM_LAYER_OUTBOUND_MAC_FRAME_NATIVE);
+
+	filterBuilder2
+		//.key(MullvadGuids::Filter_Baseline_BlockAll_Outbound_Ipv4())
+		//.name(L"Block all outbound connections (IPv4)")
+		//.description(L"This filter is part of a rule that restricts inbound and outbound traffic")
+		.provider(MullvadGuids::Provider())
+		.layer(FWPM_LAYER_OUTBOUND_MAC_FRAME_NATIVE)
+		.sublayer(MullvadGuids::SublayerBaseline())
+		.weight(wfp::FilterBuilder::WeightClass::Min)
+		.block();
+
+	return objectInstaller.addFilter(filterBuilder2, nullConditionBuilder);
 }
 
 }
