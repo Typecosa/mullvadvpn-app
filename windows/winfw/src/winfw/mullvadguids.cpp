@@ -1016,3 +1016,17 @@ const GUID &MullvadGuids::Filter_Dns_PermitLoopback_Outbound_Ipv6()
 
 	return g;
 }
+
+//static
+const GUID &MullvadGuids::blabla()
+{
+	static const GUID g =
+	{
+		0x7811263c, 
+		0x3913, // TODO: change this
+		0x428d,
+		{ 0xa5, 0x14, 0x2e, 0x43, 0x2, 0x1a, 0x73, 0x8a }
+	};
+
+	return g;
+}

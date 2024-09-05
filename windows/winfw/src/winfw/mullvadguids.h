@@ -117,6 +117,8 @@ public:
 	static const GUID &Filter_Persistent_BlockAll_Outbound_Ipv4();
 	static const GUID &Filter_Persistent_BlockAll_Inbound_Ipv6();
 	static const GUID &Filter_Persistent_BlockAll_Outbound_Ipv6();
+
+	static const GUID &blabla();
 };
 
 inline MullvadGuids::IdentityQualifier operator|(MullvadGuids::IdentityQualifier lhs, MullvadGuids::IdentityQualifier rhs)
