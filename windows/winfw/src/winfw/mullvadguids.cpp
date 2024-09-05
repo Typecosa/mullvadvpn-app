@@ -155,6 +155,7 @@ MullvadGuids::DetailedIdentityRegistry MullvadGuids::DetailedRegistry(IdentityQu
 	registry.insert(std::make_pair(WfpObjectType::Filter, Filter_Dns_PermitNonTunnel_Outbound_Ipv6()));
 	registry.insert(std::make_pair(WfpObjectType::Filter, Filter_Dns_PermitTunnel_Outbound_Ipv4()));
 	registry.insert(std::make_pair(WfpObjectType::Filter, Filter_Dns_PermitTunnel_Outbound_Ipv6()));
+	registry.insert(std::make_pair(WfpObjectType::Filter, blabla()));
 
 	if (IdentityQualifier::IncludePersistent == (qualifier & IdentityQualifier::IncludePersistent))
 	{
