@@ -4,7 +4,9 @@
 #include <libwfp/filterbuilder.h>
 #include <libwfp/nullconditionbuilder.h>
 #include <libwfp/conditionbuilder.h>
+#include <libwfp/conditions/conditionl2flags.h>
 #include <fwpmu.h>
+#include <memory>
 
 namespace rules::baseline
 {
@@ -81,18 +83,19 @@ bool BlockAll::apply(IObjectInstaller &objectInstaller)
 
 	wfp::FilterBuilder filterBuilder2;
 	wfp::ConditionBuilder conditionBuilder(FWPM_LAYER_OUTBOUND_MAC_FRAME_NATIVE);
-
+	
+	conditionBuilder.add_condition(std::make_unique<wfp::conditions::ConditionL2Flags>());
 	filterBuilder2
-		//.key(MullvadGuids::Filter_Baseline_BlockAll_Outbound_Ipv4())
-		//.name(L"Block all outbound connections (IPv4)")
-		//.description(L"This filter is part of a rule that restricts inbound and outbound traffic")
+		.key(MullvadGuids::blabla())
+		.name(L"Block all outbound Hyper-V traffic")
+		.description(L"This filter is part of a rule that blocks traffic from WSL")
 		.provider(MullvadGuids::Provider())
 		.layer(FWPM_LAYER_OUTBOUND_MAC_FRAME_NATIVE)
 		.sublayer(MullvadGuids::SublayerBaseline())
 		.weight(wfp::FilterBuilder::WeightClass::Min)
 		.block();
 
-	return objectInstaller.addFilter(filterBuilder2, nullConditionBuilder);
+	return objectInstaller.addFilter(filterBuilder2, conditionBuilder);
 }
 
 }
