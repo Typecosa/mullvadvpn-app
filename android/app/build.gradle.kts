@@ -24,6 +24,7 @@ val relayListPath = "$extraAssetsDirectory/relays.json"
 val maybenotMachinesDirectory = "$extraAssetsDirectory/maybenot_machines"
 val defaultChangelogAssetsDirectory = "$repoRootPath/android/src/main/play/release-notes/"
 val extraJniDirectory = "${project.buildDir}/extraJni"
+val rustJniLibs = "${project.buildDir}/rustJniLibs/android"
 
 val credentialsPath = "${rootProject.projectDir}/credentials"
 val keystorePropertiesFile = file("$credentialsPath/keystore.properties")
@@ -123,7 +124,7 @@ android {
                     .getOrDefault("OVERRIDE_CHANGELOG_DIR", defaultChangelogAssetsDirectory)
 
             assets.srcDirs(extraAssetsDirectory, changelogDir)
-            jniLibs.srcDirs(extraJniDirectory)
+            //jniLibs.srcDirs(rustJniLibs)
         }
     }
 
@@ -260,20 +261,17 @@ junitPlatform {
 cargo {
     module = repoRootPath
     libname = "mullvad-jni"
-    targets = listOf("arm64") // listOf("arm", "arm64", "x86", "x86_64")
+    targets = listOf("arm", "arm64", "x86", "x86_64")
     profile = "debug"
     prebuiltToolchains = true
-    // verbose = true
-    targetDirectory = extraJniDirectory
-    exec = { spec, toolchain -> spec.args = spec.args.apply { add("--package=mullvad-jni") } }
+    targetDirectory = "$repoRootPath/target"
+    //features()
+    targetIncludes = listOf("libmullvad_jni.so").toTypedArray()
+    extraCargoBuildArguments = listOf("--package=mullvad-jni")
 }
 
-tasks.register<Copy>("moveJniLibs") {
-    val cargoBuild = this.dependsOn("cargoBuild")
-    println("What the fuck!")
-    println(cargoBuild)
-    println(cargo.targets)
-    println(cargo.cargoCommand)
+/*tasks.register<Copy>("moveJniLibs") {
+    this.dependsOn("cargoBuild")
     val fromFiles =
         cargo.targets?.map { target ->
             val abi =
@@ -286,17 +284,22 @@ tasks.register<Copy>("moveJniLibs") {
                 }
             "$repoRootPath/target/$abi/debug"
         } ?: emptyList()
-    println(fromFiles.toTypedArray().contentToString())
     from(fromFiles.toTypedArray())
-    into("$extraJniDirectory")
+    into(extraJniDirectory)
     include { it.name.endsWith(".so") }
     eachFile {
-        if (this.sourcePath.contains("armv7-linux-androideabi")) {
-            this.relativePath = RelativePath(false, "arm64-v8a", this.relativePath.pathString)
-        }
-        println("Moving $name $relativePath $sourcePath $relativeSourcePath")
+        val path =
+            when {
+                file.path.contains("aarch64-linux-android") -> "arm64-v8a/$name"
+                file.path.contains("armv7-linux-androideabi") -> "armeabi-v7a/$name"
+                file.path.contains("i686-linux-android") -> "x86/$name"
+                file.path.contains("x86_64-linux-android") -> "x86_64/$name"
+                else -> error("Unknown target: ${file.path}")
+            }
+        this.path = path
+        println("Moving $name ${file.path} to $path")
     }
-}
+}*/
 
 tasks.register<Exec>("generateRelayList") {
     workingDir = File(repoRootPath)
@@ -304,28 +307,13 @@ tasks.register<Exec>("generateRelayList") {
 
     commandLine("cargo", "run", "--bin", "relay_list")
 
-    dependsOn("createRelayFile")
-
     doLast {
         val output = standardOutput as ByteArrayOutputStream
+        // Create file if needed
+        File(extraAssetsDirectory).mkdirs()
+        File("$extraAssetsDirectory/relays.json").createNewFile()
         FileOutputStream("$extraAssetsDirectory/relays.json").use { it.write(output.toByteArray()) }
     }
-}
-
-tasks.register<Exec>("createExtraAssetsFolder") {
-    workingDir = File("${rootProject.projectDir}")
-
-    commandLine("mkdir", "-p", extraAssetsDirectory)
-
-    dependsOn("moveJniLibs")
-}
-
-tasks.register<Exec>("createRelayFile") {
-    workingDir = File(extraAssetsDirectory)
-
-    commandLine("touch", "relays.json")
-
-    dependsOn("createExtraAssetsFolder")
 }
 
 composeCompiler { enableStrongSkippingMode = true }
@@ -370,11 +358,11 @@ tasks.register("ensureMaybenotMachinesExist") {
 
 tasks.register("ensureJniDirectoryExist") {
     doLast {
-        if (!file(extraJniDirectory).exists()) {
-            throw GradleException("Missing JNI directory: $extraJniDirectory")
+        if (!file(rustJniLibs).exists()) {
+            throw GradleException("Missing JNI directory: $rustJniLibs")
         }
     }
-    dependsOn("moveJniLibs")
+    dependsOn("cargoBuild")
 }
 
 // This is a safety net to avoid generating too big version codes, since that could potentially be
