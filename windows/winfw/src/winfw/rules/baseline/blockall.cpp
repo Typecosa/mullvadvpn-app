@@ -4,9 +4,11 @@
 #include <libwfp/filterbuilder.h>
 #include <libwfp/nullconditionbuilder.h>
 #include <libwfp/conditionbuilder.h>
-#include <libwfp/conditions/conditionl2flags.h>
+#include <libwfp/conditions/conditionl2flags.h>>
+#include <libwfp/conditions/conditioninterface.h>
 #include <fwpmu.h>
 #include <memory>
+#include <iphlpapi.h>
 
 namespace rules::baseline
 {
@@ -83,8 +85,10 @@ bool BlockAll::apply(IObjectInstaller &objectInstaller)
 
 	wfp::FilterBuilder filterBuilder2;
 	wfp::ConditionBuilder conditionBuilder(FWPM_LAYER_OUTBOUND_MAC_FRAME_NATIVE);
-	
+	auto index = if_nametoindex("Mullvad");
+    conditionBuilder.add_condition(wfp::conditions::ConditionInterface::Index(index, wfp::conditions::CompareNeq()));
 	conditionBuilder.add_condition(std::make_unique<wfp::conditions::ConditionL2Flags>());
+
 	filterBuilder2
 		.key(MullvadGuids::blabla())
 		.name(L"Block all outbound Hyper-V traffic")
