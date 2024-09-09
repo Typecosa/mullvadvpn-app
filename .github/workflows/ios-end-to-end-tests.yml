@@ -106,6 +106,7 @@ jobs:
           mkdir -p "$JOB_OUTPUTS_DIRECTORY/derived-data"
           cp -R ios/derived-data "$JOB_OUTPUTS_DIRECTORY"
           cp -R . $JOB_OUTPUTS_DIRECTORY/mullvadvpn-app
+          cp -R ios/Configurations/*.xcconfig $JOB_OUTPUTS_DIRECTORY
         shell: bash
         env:
           JOB_OUTPUTS_DIRECTORY: ${{ needs.set-up-outputs-directory.outputs.job_outputs_directory }}
