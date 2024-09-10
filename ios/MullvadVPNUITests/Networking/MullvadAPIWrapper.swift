@@ -93,6 +93,7 @@ class MullvadAPIWrapper {
             do {
                 accountNumber = try self.mullvadAPI.createAccount()
             } catch {
+                XCTFail("Caught error: " + error.localizedDescription)
                 requestError = MullvadAPIError.requestError
             }
 
