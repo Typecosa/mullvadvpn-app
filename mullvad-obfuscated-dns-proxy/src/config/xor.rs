@@ -68,12 +68,12 @@ impl Obfuscator for Xor {
         }
     }
 
-    fn clone(&self) -> Box<dyn super::Obfuscator> {
-        Box::new(Self {
+    fn clone(&self) -> Self {
+        Self {
             xor_key: self.xor_key.clone(),
             addr: self.addr,
             key_index: 0,
-        })
+        }
     }
 }
 

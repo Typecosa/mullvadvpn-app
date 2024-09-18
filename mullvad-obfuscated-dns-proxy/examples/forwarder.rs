@@ -16,7 +16,6 @@ async fn main() {
     let bind_addr = args().nth(1).unwrap_or("127.0.0.1:0".to_string());
     let obfuscator = configs.xor.pop().expect("No XOR config");
     println!("Obfuscator in use - {:?}", obfuscator);
-    let obfuscator: Box<dyn Obfuscator> = Box::new(obfuscator);
     let listener = TcpListener::bind(bind_addr)
         .await
         .expect("Failed to bind listener socket");
@@ -25,9 +24,8 @@ async fn main() {
         .expect("failed to obtain listen address");
     println!("Listening on {listen_addr}");
     while let Ok((client_conn, _client_addr)) = listener.accept().await {
-        let connected = crate::forwarder::Forwarder::connect(obfuscator.clone())
+        forwarder::forward(obfuscator.clone(), client_conn)
             .await
-            .expect("failed to connect to obfuscator");
-        let _ = connected.forward(client_conn).await;
+            .unwrap();
     }
 }

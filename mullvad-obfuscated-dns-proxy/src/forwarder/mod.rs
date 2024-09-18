@@ -1,101 +1,29 @@
-use std::{io, task::{ready, Poll}};
-
+use crate::config::Obfuscator;
 use tokio::{
-    io::{AsyncRead, AsyncWrite},
+    io::{self, AsyncRead, AsyncWrite},
     net::TcpStream,
 };
 
-use crate::config::Obfuscator;
-
-pub struct Forwarder {
-    read_obfuscator: Box<dyn Obfuscator>,
-    write_obfuscator: Box<dyn Obfuscator>,
-    server_connection: TcpStream,
+pub async fn forward(obfuscator: impl Obfuscator, client_stream: TcpStream) -> io::Result<()> {
+    let server_connection = TcpStream::connect(obfuscator.addr()).await?;
+    let write_obfuscator = obfuscator.clone();
+    let (server_read, server_write) = server_connection.into_split();
+    let (client_read, client_write) = client_stream.into_split();
+    let ((), ()) = tokio::try_join!(
+        forward_inner(obfuscator, client_read, server_write),
+        forward_inner(write_obfuscator, server_read, client_write)
+    )?;
+    Ok(())
 }
 
-impl Forwarder {
-    pub async fn connect(read_obfuscator: Box<dyn Obfuscator>) -> io::Result<Self> {
-        let server_connection = TcpStream::connect(read_obfuscator.addr()).await?;
-        let write_obfuscator = read_obfuscator.clone();
-
-        Ok(Self {
-            read_obfuscator,
-            write_obfuscator,
-            server_connection,
-        })
-    }
-    pub async fn forward(self, client_stream: TcpStream) {
-        let (server_read, server_write) = self.server_connection.into_split();
-        let (client_read, client_write) = client_stream.into_split();
-        let _ = tokio::join!(
-            forward(self.read_obfuscator, client_read, server_write),
-            forward(self.write_obfuscator, server_read, client_write)
-        );
-    }
-}
-
-impl tokio::io::AsyncRead for Forwarder {
-    fn poll_read(
-        mut self: std::pin::Pin<&mut Self>,
-        cx: &mut std::task::Context<'_>,
-        buf: &mut tokio::io::ReadBuf<'_>,
-    ) -> std::task::Poll<std::io::Result<()>> {
-        // Need to keep track of how many bytes in the buffer have already been deobfuscated.
-        let new_read_start = buf.remaining();
-
-        let socket = std::pin::pin!(&mut self.server_connection);
-        match ready!(socket.poll_read(cx, buf)) {
-            // in this case, we can read and deobfuscate.
-            Ok(()) => {
-                let newly_read_bytes = &mut buf.filled_mut()[new_read_start..];
-                self.read_obfuscator.obfuscate(newly_read_bytes);
-                Poll::Ready(Ok(()))
-            }
-            Err(err) => Poll::Ready(Err(err)),
-        }
-    }
-}
-
-impl tokio::io::AsyncWrite for Forwarder {
-    fn poll_write(
-        mut self: std::pin::Pin<&mut Self>,
-        cx: &mut std::task::Context<'_>,
-        buf: &[u8],
-    ) -> Poll<Result<usize, io::Error>> {
-        let socket = std::pin::pin!(&mut self.server_connection);
-        if let Err(err) =  ready!(socket.poll_write_ready(cx)) {
-                return Poll::Ready(Err(err));
-        };
-
-        let mut owned_buf = buf.to_vec();
-        self.write_obfuscator.obfuscate(owned_buf.as_mut_slice());
-        let socket = std::pin::pin!(&mut self.server_connection);
-        socket.poll_write(cx, &owned_buf)
-    }
-
-    fn poll_flush(
-        mut self: std::pin::Pin<&mut Self>,
-        cx: &mut std::task::Context<'_>,
-    ) -> Poll<Result<(), io::Error>> {
-        std::pin::pin!(&mut self.server_connection).poll_flush(cx)
-    }
-
-    fn poll_shutdown(
-        mut self: std::pin::Pin<&mut Self>,
-        cx: &mut std::task::Context<'_>,
-    ) -> Poll<Result<(), io::Error>> {
-        std::pin::pin!(&mut self.server_connection).poll_shutdown(cx)
-    }
-}
-
-async fn forward(
-    mut obfuscator: Box<dyn Obfuscator + Send>,
+async fn forward_inner(
+    mut obfuscator: impl Obfuscator,
     mut source: impl AsyncRead + Unpin,
     mut sink: impl AsyncWrite + Unpin,
 ) -> io::Result<()> {
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
     let mut buf = vec![0u8; 1024 * 64];
-    while let Ok(n_bytes_read) = AsyncReadExt::read(&mut source, &mut buf).await {
+    while let Ok(n_bytes_read) = source.read(&mut buf).await {
         if n_bytes_read == 0 {
             break;
         }

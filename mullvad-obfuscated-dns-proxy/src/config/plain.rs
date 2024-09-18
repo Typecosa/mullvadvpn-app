@@ -48,8 +48,8 @@ impl super::Obfuscator for Plain {
         self.addr
     }
 
-    fn clone(&self) -> Box<dyn super::Obfuscator> {
-        Box::new(Clone::clone(self))
+    fn clone(&self) -> Self {
+        Clone::clone(self)
     }
 }
 

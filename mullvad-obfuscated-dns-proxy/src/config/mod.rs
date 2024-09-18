@@ -89,5 +89,5 @@ pub trait Obfuscator: Send {
     fn obfuscate(&mut self, buffer: &mut [u8]);
     /// Constructs a new obfuscator of the same type and configuration, with it's internal state
     /// reset.
-    fn clone(&self) -> Box<dyn Obfuscator>;
+    fn clone(&self) -> Self;
 }
