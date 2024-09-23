@@ -10,6 +10,7 @@ import MullvadLogging
 import MullvadSettings
 import Operations
 import Routing
+import SwiftUI
 import UIKit
 
 /// Settings navigation route.
@@ -250,11 +251,11 @@ final class SettingsCoordinator: Coordinator, Presentable, Presenting, SettingsV
                 ipOverrideRepository: ipOverrideRepository
             ))
 
-        case .problemReport:
-            return .viewController(ProblemReportViewController(
-                interactor: interactorFactory.makeProblemReportInteractor(),
-                alertPresenter: AlertPresenter(context: self)
-            ))
+//        case .problemReport:
+//            return .viewController(ProblemReportViewController(
+//                interactor: interactorFactory.makeProblemReportInteractor(),
+//                alertPresenter: AlertPresenter(context: self)
+//            ))
 
         case .apiAccess:
             return .childCoordinator(ListAccessMethodCoordinator(
@@ -266,6 +267,9 @@ final class SettingsCoordinator: Coordinator, Presentable, Presenting, SettingsV
         case .faq:
             // Handled separately and presented as a modal.
             return .failed
+
+        case .problemReport:
+            return .viewController(UIHostingController(rootView: TestView()))
         }
     }
 

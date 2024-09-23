@@ -43,6 +43,7 @@
 		449872E12B7BBC5400094DDC /* TunnelSettingsUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 449872E02B7BBC5400094DDC /* TunnelSettingsUpdate.swift */; };
 		449872E42B7CB96300094DDC /* TunnelSettingsUpdateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 449872E32B7CB96300094DDC /* TunnelSettingsUpdateTests.swift */; };
 		449EBA262B975B9700DFA4EB /* EphemeralPeerReceiving.swift in Sources */ = {isa = PBXBuildFile; fileRef = 449EBA252B975B9700DFA4EB /* EphemeralPeerReceiving.swift */; };
+		44ADDBCC2CA1582C0040D6AF /* TestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44ADDBCB2CA1582C0040D6AF /* TestView.swift */; };
 		44B02E3B2BC5732D008EDF34 /* LoggingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44B02E3A2BC5732D008EDF34 /* LoggingTests.swift */; };
 		44B02E3C2BC5B8A5008EDF34 /* Bundle+ProductVersion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5891BF1B25E3E3EB006D6FB0 /* Bundle+ProductVersion.swift */; };
 		44B3C43A2BFE2C800079782C /* PacketTunnelActorReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44B3C4392BFE2C800079782C /* PacketTunnelActorReducer.swift */; };
@@ -1378,6 +1379,7 @@
 		449EB9FC2B95F8AD00DFA4EB /* DeviceMock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeviceMock.swift; sourceTree = "<group>"; };
 		449EB9FE2B95FF2500DFA4EB /* AccountMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountMock.swift; sourceTree = "<group>"; };
 		449EBA252B975B9700DFA4EB /* EphemeralPeerReceiving.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EphemeralPeerReceiving.swift; sourceTree = "<group>"; };
+		44ADDBCB2CA1582C0040D6AF /* TestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestView.swift; sourceTree = "<group>"; };
 		44B02E3A2BC5732D008EDF34 /* LoggingTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoggingTests.swift; sourceTree = "<group>"; };
 		44B3C4392BFE2C800079782C /* PacketTunnelActorReducer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PacketTunnelActorReducer.swift; sourceTree = "<group>"; };
 		44B3C43C2C00CBBC0079782C /* PacketTunnelActorReducerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PacketTunnelActorReducerTests.swift; sourceTree = "<group>"; };
@@ -2582,6 +2584,14 @@
 			path = Protocols;
 			sourceTree = "<group>";
 		};
+		44ADDBC82CA156CC0040D6AF /* SwiftUIExperiment */ = {
+			isa = PBXGroup;
+			children = (
+				44ADDBCB2CA1582C0040D6AF /* TestView.swift */,
+			);
+			path = SwiftUIExperiment;
+			sourceTree = "<group>";
+		};
 		44B3C43B2C00CB570079782C /* PacketTunnelCore */ = {
 			isa = PBXGroup;
 			children = (
@@ -2733,6 +2743,7 @@
 		583FE01629C196E8006E85F9 /* View controllers */ = {
 			isa = PBXGroup;
 			children = (
+				44ADDBC82CA156CC0040D6AF /* SwiftUIExperiment */,
 				583FE02029C1A0B1006E85F9 /* Account */,
 				F0E8E4BF2A602C7D00ED26A3 /* AccountDeletion */,
 				7A2960F72A964A3500389B82 /* Alert */,
@@ -5665,6 +5676,7 @@
 				7A5869C72B5A8E4C00640D27 /* MethodSettingsDataSourceConfiguration.swift in Sources */,
 				58F2E14C276A61C000A79513 /* RotateKeyOperation.swift in Sources */,
 				5871FB96254ADE4E0051A0A4 /* ConsolidatedApplicationLog.swift in Sources */,
+				44ADDBCC2CA1582C0040D6AF /* TestView.swift in Sources */,
 				F0E8E4C52A60499100ED26A3 /* AccountDeletionViewController.swift in Sources */,
 				7A9CCCC12A96302800DD6A34 /* AccountCoordinator.swift in Sources */,
 				58FEEB58260B662E00A621A8 /* AutomaticKeyboardResponder.swift in Sources */,
