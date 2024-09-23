@@ -28,7 +28,9 @@ struct TestView: View {
         }
         .background(Color(UIColor.secondaryColor))
         .foregroundColor(Color(UIColor.primaryTextColor))
-        .navigationTitle("Multihop")
+        // Don't do this as it doesn't play nicely with UIKit navigation
+//        .navigationTitle("Multihop")
+        .navigationBarTitleDisplayMode(.large)
     }
 }
 

@@ -269,7 +269,9 @@ final class SettingsCoordinator: Coordinator, Presentable, Presenting, SettingsV
             return .failed
 
         case .problemReport:
-            return .viewController(UIHostingController(rootView: TestView()))
+            let controller = UIHostingController(rootView: TestView())
+            controller.title = "Multihop"
+            return .viewController(controller)
         }
     }
 
