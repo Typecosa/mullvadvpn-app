@@ -10,8 +10,7 @@ import Foundation
 import MullvadRustRuntimeProxy
 
 enum EncryptedDnsProxyError: Error {
-    case initialization
-    case start(err: Int32)
+    ase start(err: Int32)
 }
 
 public class EncryptedDNSProxy {
