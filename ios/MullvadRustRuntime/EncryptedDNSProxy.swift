@@ -35,12 +35,12 @@ public class EncryptedDNSProxy {
         stateLock.lock()
         defer { stateLock.unlock() }
         guard didStart == false else { return }
-        didStart = true
 
         let err = encrypted_dns_proxy_start(state, &proxyConfig)
         if err != 0 {
             throw EncryptedDnsProxyError.start(err: err)
         }
+        didStart = true
     }
 
     public func stop() {
