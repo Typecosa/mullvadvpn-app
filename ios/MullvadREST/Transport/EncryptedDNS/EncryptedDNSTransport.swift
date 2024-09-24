@@ -30,7 +30,15 @@ public final class EncryptedDNSTransport: RESTTransport {
         _ request: URLRequest,
         completion: @escaping (Data?, URLResponse?, (any Error)?) -> Void
     ) -> any Cancellable {
-        try? self.encryptedDnsProxy.start()
+        // TODO: Handle this error
+        do {
+          try self.encryptedDnsProxy.start()
+        } catch {
+            return AnyCancellable {
+                completion(nil, nil, error)
+            }
+        }
+        
 
         var urlRequestCopy = request
         urlRequestCopy.url = request.url.flatMap { url in
