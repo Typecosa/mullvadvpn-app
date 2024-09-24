@@ -48,7 +48,7 @@ public final class EncryptedDNSTransport: RESTTransport {
                 completion(data, response, maybeError)
             }
 
-        let dataTask = urlSession.dataTask(with: request, completionHandler: wrappedCompletionHandler)
+        let dataTask = urlSession.dataTask(with: urlRequestCopy, completionHandler: wrappedCompletionHandler)
         dataTask.resume()
         return dataTask
     }
