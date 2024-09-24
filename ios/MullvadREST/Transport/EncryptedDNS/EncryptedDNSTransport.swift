@@ -16,20 +16,39 @@ public final class EncryptedDNSTransport: RESTTransport {
 
     /// The `URLSession` used to send requests via `encryptedDNSProxy`
     public let urlSession: URLSession
+    private let encryptedDnsProxy: EncryptedDNSProxy
 
     public init(
         urlSession: URLSession,
         addressCache: REST.AddressCache
     ) {
         self.urlSession = urlSession
+        self.encryptedDnsProxy = EncryptedDNSProxy()
     }
 
     public func sendRequest(
         _ request: URLRequest,
         completion: @escaping (Data?, URLResponse?, (any Error)?) -> Void
     ) -> any Cancellable {
-        // TODO: Start proxy once the backend is integrated into the Swift code.
-        let dataTask = urlSession.dataTask(with: request, completionHandler: completion)
+        try? self.encryptedDnsProxy.start()
+
+        var urlRequestCopy = request
+        urlRequestCopy.url = request.url.flatMap { url in
+            var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+            components?.host = "127.0.0.1"
+            components?.port = Int(encryptedDnsProxy.localPort())
+            return components?.url
+        }
+
+        let wrappedCompletionHandler: (Data?, URLResponse?, (any Error)?)
+            -> Void = { [weak self] data, response, maybeError in
+                if maybeError != nil {
+                    self?.encryptedDnsProxy.stop()
+                }
+                completion(data, response, maybeError)
+            }
+
+        let dataTask = urlSession.dataTask(with: request, completionHandler: wrappedCompletionHandler)
         dataTask.resume()
         return dataTask
     }
