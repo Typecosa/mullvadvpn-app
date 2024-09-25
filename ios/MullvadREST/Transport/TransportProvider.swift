@@ -17,7 +17,6 @@ public final class TransportProvider: RESTTransportProvider {
     private var currentTransport: RESTTransport?
     private var currentTransportType: TransportStrategy.Transport
     private let parallelRequestsMutex = NSLock()
-    private let encryptedDNSTransport: EncryptedDNSTransport!
 
     public init(
         urlSessionTransport: URLSessionTransport,
@@ -28,10 +27,6 @@ public final class TransportProvider: RESTTransportProvider {
         self.addressCache = addressCache
         self.transportStrategy = transportStrategy
         self.currentTransportType = transportStrategy.connectionTransport()
-        self.encryptedDNSTransport = EncryptedDNSTransport(
-            urlSession: urlSessionTransport.urlSession,
-            addressCache: addressCache
-        )
     }
 
     public func makeTransport() -> RESTTransport? {
@@ -87,14 +82,10 @@ public final class TransportProvider: RESTTransportProvider {
                     addressCache: addressCache
                 )
             case .encryptedDNS:
-<<<<<<< HEAD
                 currentTransport = EncryptedDNSTransport(
                     urlSession: urlSessionTransport.urlSession,
                     addressCache: addressCache
                 )
-=======
-                currentTransport = encryptedDNSTransport
->>>>>>> b7f4da52f (Make it work on iOS)
             case .none:
                 currentTransport = nil
             }
