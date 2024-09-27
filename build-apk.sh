@@ -48,7 +48,7 @@ if [[ "$GRADLE_BUILD_TYPE" == "release" ]]; then
     fi
 fi
 
-if [[ "$BUILD_TYPE" == "release" && "$PRODUCT_VERSION" != *"-dev-"* ]]; then
+if [[ "$BUILD_TYPE" == "release" ]]; then
     echo "Removing old Rust build artifacts"
     cargo clean
     CARGO_ARGS+=( "--locked" )
