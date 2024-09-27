@@ -319,6 +319,10 @@ private fun MullvadMap(state: ConnectUiState, progressIndicatorBias: Float) {
 
     val longitudeAnimation = remember { Animatable(userCameraLatLong.value.longitude.value) }
 
+    LaunchedEffect(state.tunnelState.location()) {
+        longitudeAnimation.animateTo(state.tunnelState.location()?.longitude?.toFloat() ?:0f)
+    }
+
     val locationMarkers =
         state.relayLocations.map {
             Marker(
@@ -350,7 +354,7 @@ private fun MullvadMap(state: ConnectUiState, progressIndicatorBias: Float) {
                         },
                         onGesture = { centroid: Offset, pan: Offset, newZoom: Float, rotation: Float
                             ->
-                            userZoom = (userZoom / newZoom).coerceIn(1f, 2f)
+                            userZoom = (userZoom / newZoom).coerceIn(1.15f, 2f)
                             Logger.d { "Animation onGesture" }
 
 
@@ -383,7 +387,7 @@ private fun MullvadMap(state: ConnectUiState, progressIndicatorBias: Float) {
                             Logger.d { "Animation onGestureEnd" }
                             // Longitude
                             scope.launch {
-                               longitudeAnimation.animateDecay(tracker.calculateVelocity().x, exponentialDecay(0.2f))
+                               longitudeAnimation.animateDecay(tracker.calculateVelocity().x, exponentialDecay(0.4f))
                             }
                         },
                     )
