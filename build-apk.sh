@@ -48,15 +48,15 @@ if [[ "$GRADLE_BUILD_TYPE" == "release" ]]; then
     fi
 fi
 
-if [[ "$BUILD_TYPE" == "release" ]]; then
-    echo "Removing old Rust build artifacts"
-    cargo clean
-    CARGO_ARGS+=( "--locked" )
-else
-    CARGO_ARGS+=( "--features" "api-override" )
-    GRADLE_TASKS+=(createPlayDevmoleReleaseDistApk createPlayStagemoleReleaseDistApk)
-    BUNDLE_TASKS+=(createPlayDevmoleReleaseDistBundle createPlayStagemoleReleaseDistBundle)
-fi
+# if [[ "$BUILD_TYPE" == "release" ]]; then
+#     echo "Removing old Rust build artifacts"
+#     cargo clean
+#     CARGO_ARGS+=( "--locked" )
+# else
+#     CARGO_ARGS+=( "--features" "api-override" )
+#     GRADLE_TASKS+=(createPlayDevmoleReleaseDistApk createPlayStagemoleReleaseDistApk)
+#     BUNDLE_TASKS+=(createPlayDevmoleReleaseDistBundle createPlayStagemoleReleaseDistBundle)
+# fi
 
 pushd "$SCRIPT_DIR/android"
 
