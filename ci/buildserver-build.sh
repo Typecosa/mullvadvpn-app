@@ -106,7 +106,7 @@ function run_in_build_env {
     fi
 }
 
-# Sign DEB+RPM on Linux
+# Sign deb, rpm, and pacman-archives on Linux
 function sign_linux_packages {
     for installer_path in dist/MullvadVPN-*.deb; do
         echo "Signing $installer_path"
@@ -115,6 +115,10 @@ function sign_linux_packages {
     for installer_path in dist/MullvadVPN-*.rpm; do
         echo "Signing $installer_path"
         rpm --addsign "$installer_path"
+    done
+    for installer_path in dist/MullvadVPN-*.pkg.tar.xz; do
+        echo "Signing $installer_path"
+        gpg --detach-sign --no-armor --output "$installer_path.sig" --sign "$installer_path"
     done
 }
 
@@ -130,7 +134,7 @@ function build {
     if [[ "$(uname -s)" == "Linux" ]]; then
         sign_linux_packages
     fi
-    mv dist/*.{deb,rpm,exe,pkg} "$artifact_dir" || return 1
+    mv dist/*.{deb,rpm,.pkg.tar.xz{,.sig},exe,pkg} "$artifact_dir" || return 1
 
     (run_in_build_env gui/scripts/build-test-executable.sh "$target" && \
         mv "dist/app-e2e-tests-$version"* "$artifact_dir") || \
@@ -224,8 +228,9 @@ function build_ref {
         # Will only match paths that include *-dev-* which means release builds will not be included
         # Pipes all matching names and their new name to mv
         pushd "$artifact_dir"
-        for original_file in MullvadVPN-*-dev-*{.deb,.rpm,.exe,.pkg}; do
-            new_file=$(echo "$original_file" | sed -nE "s/^(MullvadVPN-.*-dev-.*)(_amd64\.deb|_x86_64\.rpm|_arm64\.deb|_aarch64\.rpm|_x64\.exe|_arm64\.exe|\.pkg)$/\1$version_suffix\2/p")
+        for original_file in MullvadVPN-*-dev-*{.deb,.rpm,.pkg.tar.xz{,.sig},.exe,.pkg}; do
+            # TODO: also rename pacman ARM archives
+            new_file=$(echo "$original_file" | sed -nE "s/^(MullvadVPN-.*-dev-.*)(_amd64\.deb|_x86_64\.rpm|_x64\.pkg\.tar\.xz|_x64\.pkg\.tar\.xz.sig|_arm64\.deb|_aarch64\.rpm|_x64\.exe|_arm64\.exe|\.pkg)$/\1$version_suffix\2/p")
             mv "$original_file" "$new_file"
         done
         popd
