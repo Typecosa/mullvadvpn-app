@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import net.mullvad.mullvadvpn.compose.screen.toLatLong
 import net.mullvad.mullvadvpn.compose.state.ConnectUiState
 import net.mullvad.mullvadvpn.lib.model.ActionAfterDisconnect
 import net.mullvad.mullvadvpn.lib.model.ConnectError
@@ -102,7 +103,8 @@ class ConnectViewModel(
                     inAppNotification = notifications.firstOrNull(),
                     deviceName = deviceName,
                     daysLeftUntilExpiry = accountData?.expiryDate?.daysFromNow(),
-                    relayLocations = relayCities,
+                    relayLocations =
+                        relayCities.filter { it.latLong != tunnelState.location()?.toLatLong() },
                     isPlayBuild = isPlayBuild,
                 )
             }
