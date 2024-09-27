@@ -1,6 +1,9 @@
 package net.mullvad.mullvadvpn.compose.preview
 
 import net.mullvad.mullvadvpn.lib.model.GeoLocationId
+import net.mullvad.mullvadvpn.lib.model.LatLong
+import net.mullvad.mullvadvpn.lib.model.Latitude
+import net.mullvad.mullvadvpn.lib.model.Longitude
 import net.mullvad.mullvadvpn.lib.model.Ownership
 import net.mullvad.mullvadvpn.lib.model.Provider
 import net.mullvad.mullvadvpn.lib.model.ProviderId
@@ -45,6 +48,7 @@ private fun generateRelayItemCity(
                     active,
                 )
             },
+        latLong = LatLong(Latitude.fromFloat(0f), Longitude.fromFloat(0f)),
     )
 
 private fun generateRelayItemRelay(

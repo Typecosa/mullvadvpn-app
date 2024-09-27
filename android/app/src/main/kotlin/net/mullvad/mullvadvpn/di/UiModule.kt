@@ -192,6 +192,7 @@ val uiModule = module {
             get(),
             get(),
             get(),
+            get(),
             IS_PLAY_BUILD,
         )
     }
