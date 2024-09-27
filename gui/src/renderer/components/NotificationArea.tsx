@@ -19,7 +19,7 @@ import {
 } from '../../shared/notifications/notification';
 import { useAppContext } from '../context';
 import useActions from '../lib/actionsHook';
-import { transitions, useHistory } from '../lib/history';
+import { TransitionType, useHistory } from '../lib/history';
 import { formatHtml } from '../lib/html-formatter';
 import { RoutePath } from '../lib/routes';
 import accountActions from '../redux/account/actions';
@@ -154,7 +154,7 @@ function NotificationActionWrapper(props: INotificationActionWrapperProps) {
 
   const goToProblemReport = useCallback(() => {
     setTroubleshootInfo(undefined);
-    push(RoutePath.problemReport, { transition: transitions.show });
+    push(RoutePath.problemReport, { transition: TransitionType.show });
   }, [push]);
 
   const closeTroubleshootInfo = useCallback(() => setTroubleshootInfo(undefined), []);
