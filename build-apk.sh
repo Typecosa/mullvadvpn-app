@@ -77,42 +77,44 @@ mkdir -p "app/build/extraAssets"
 mkdir -p "app/build/extraJni"
 popd
 
-for ARCHITECTURE in ${ARCHITECTURES:-aarch64 armv7 x86_64 i686}; do
-    case "$ARCHITECTURE" in
-        "x86_64")
-            TARGET="x86_64-linux-android"
-            ABI="x86_64"
-            ;;
-        "i686")
-            TARGET="i686-linux-android"
-            ABI="x86"
-            ;;
-        "aarch64")
-            TARGET="aarch64-linux-android"
-            ABI="arm64-v8a"
-            ;;
-        "armv7")
-            TARGET="armv7-linux-androideabi"
-            ABI="armeabi-v7a"
-            ;;
-    esac
+# for ARCHITECTURE in ${ARCHITECTURES:-aarch64 armv7 x86_64 i686}; do
+#     case "$ARCHITECTURE" in
+#         "x86_64")
+#             TARGET="x86_64-linux-android"
+#             ABI="x86_64"
+#             ;;
+#         "i686")
+#             TARGET="i686-linux-android"
+#             ABI="x86"
+#             ;;
+#         "aarch64")
+#             TARGET="aarch64-linux-android"
+#             ABI="arm64-v8a"
+#             ;;
+#         "armv7")
+#             TARGET="armv7-linux-androideabi"
+#             ABI="armeabi-v7a"
+#             ;;
+#     esac
 
-    echo "Building mullvad-daemon for $TARGET"
-    cargo build "${CARGO_ARGS[@]}" --target "$TARGET" --package mullvad-jni
+#     echo "Building mullvad-daemon for $TARGET"
+#     cargo build "${CARGO_ARGS[@]}" --target "$TARGET" --package mullvad-jni
 
-    STRIP_TOOL="${NDK_TOOLCHAIN_DIR}/llvm-strip"
-    TARGET_LIB_PATH="$SCRIPT_DIR/android/app/build/extraJni/$ABI/libmullvad_jni.so"
-    UNSTRIPPED_LIB_PATH="$CARGO_TARGET_DIR/$TARGET/$BUILD_TYPE/libmullvad_jni.so"
+#     STRIP_TOOL="${NDK_TOOLCHAIN_DIR}/llvm-strip"
+#     TARGET_LIB_PATH="$SCRIPT_DIR/android/app/build/extraJni/$ABI/libmullvad_jni.so"
+#     UNSTRIPPED_LIB_PATH="$CARGO_TARGET_DIR/$TARGET/$BUILD_TYPE/libmullvad_jni.so"
 
-    if [[ "$SKIP_STRIPPING" == "yes" ]]; then
-        cp "$UNSTRIPPED_LIB_PATH" "$TARGET_LIB_PATH"
-    else
-        $STRIP_TOOL --strip-debug --strip-unneeded -o "$TARGET_LIB_PATH" "$UNSTRIPPED_LIB_PATH"
-    fi
-done
+#     if [[ "$SKIP_STRIPPING" == "yes" ]]; then
+#         cp "$UNSTRIPPED_LIB_PATH" "$TARGET_LIB_PATH"
+#     else
+#         $STRIP_TOOL --strip-debug --strip-unneeded -o "$TARGET_LIB_PATH" "$UNSTRIPPED_LIB_PATH"
+#     fi
+# done
+
+mkdir -p "$SCRIPT_DIR/android/app/build/extraJni"
 
 echo "Updating relays.json..."
-cargo run --bin relay_list "${CARGO_ARGS[@]}" > android/app/build/extraAssets/relays.json
+#cargo run --bin relay_list "${CARGO_ARGS[@]}" > android/app/build/extraAssets/relays.json
 
 echo "Copying maybenot machines..."
 cp dist-assets/maybenot_machines android/app/build/extraAssets/maybenot_machines
