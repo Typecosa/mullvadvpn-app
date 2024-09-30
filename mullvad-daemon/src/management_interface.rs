@@ -28,6 +28,7 @@ use std::{
 use talpid_types::ErrorExt;
 use tokio::time::timeout;
 use tokio_stream::wrappers::UnboundedReceiverStream;
+use tracing::instrument;
 
 const RPC_SERVER_SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(1);
 
@@ -1146,6 +1147,7 @@ pub struct ManagementInterfaceServer {
 }
 
 impl ManagementInterfaceServer {
+    #[instrument(skip_all)]
     pub fn start(
         daemon_tx: DaemonCommandSender,
         rpc_socket_path: impl AsRef<Path>,

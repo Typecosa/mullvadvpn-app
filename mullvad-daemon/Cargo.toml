@@ -46,6 +46,11 @@ clap = { workspace = true }
 log-panics = "2.0.0"
 mullvad-management-interface = { path = "../mullvad-management-interface" }
 tracing-appender = "0.2.3"
+opentelemetry = "0.25.0"
+opentelemetry_sdk = { version = "0.25.0", features = ["rt-tokio"] }
+tracing-opentelemetry = "0.26.0"
+opentelemetry-otlp = "0.25.0"
+opentelemetry-semantic-conventions = "0.25"
 
 [dev-dependencies]
 talpid-time = { path = "../talpid-time", features = ["test"] }

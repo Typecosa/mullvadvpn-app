@@ -136,7 +136,8 @@ pub fn init_logger(
 
     let stdout_formatter = tracing_subscriber::fmt::layer()
         .with_ansi(true)
-        .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE);
+        .with_target(false);
+    // .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE);
 
     let (user_filter, reload_handle) = tracing_subscriber::reload::Layer::new(env_filter);
     let reload_handle = LogHandle {
@@ -159,7 +160,7 @@ pub fn init_logger(
             .with_writer(non_blocking_file_appender);
         let grpc_formatter = tracing_subscriber::fmt::layer()
             .with_ansi(true)
-            .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
+            // .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
             .with_writer(std::sync::Mutex::new(log_stream));
         reg.with(
             stdout_formatter.with_timer(tracing_subscriber::fmt::time::ChronoUtc::new(
@@ -176,11 +177,12 @@ pub fn init_logger(
                 DATE_TIME_FORMAT_STR.to_string(),
             )),
         )
+        .with(opentelemetry::otlp_layer())
         .init();
     } else {
         let grpc_formatter = tracing_subscriber::fmt::layer()
             .with_ansi(true)
-            .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
+            // .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
             .with_writer(std::sync::Mutex::new(log_stream));
         let file_formatter = tracing_subscriber::fmt::layer()
             .with_ansi(false)
@@ -188,6 +190,7 @@ pub fn init_logger(
         reg.with(stdout_formatter.without_time())
             .with(file_formatter.without_time())
             .with(grpc_formatter.without_time())
+            .with(opentelemetry::otlp_layer())
             .init();
     }
 
@@ -203,6 +206,139 @@ pub fn init_logger(
     LOG_ENABLED.store(true, Ordering::SeqCst);
 
     Ok(reload_handle)
+}
+
+mod opentelemetry {
+    use opentelemetry::{global, trace::TracerProvider, KeyValue};
+
+    use opentelemetry_sdk::{
+        runtime,
+        trace::{BatchConfig, RandomIdGenerator, Sampler},
+        Resource,
+    };
+
+    use opentelemetry_semantic_conventions::{
+        resource::{DEPLOYMENT_ENVIRONMENT_NAME, SERVICE_NAME, SERVICE_VERSION},
+        SCHEMA_URL,
+    };
+
+    use tracing_subscriber::Layer;
+
+    pub(crate) fn otlp_layer<T>() -> impl Layer<T>
+    where
+        T: tracing::Subscriber + for<'span> tracing_subscriber::registry::LookupSpan<'span>,
+    {
+        let tracer = init_tracer();
+
+        tracing_opentelemetry::layer().with_tracer(tracer)
+    }
+
+    // Construct Tracer for OpenTelemetryLayer
+    fn init_tracer() -> opentelemetry_sdk::trace::Tracer {
+        let provider = opentelemetry_otlp::new_pipeline()
+            .tracing()
+            .with_trace_config(
+                opentelemetry_sdk::trace::Config::default()
+                // Customize sampling strategy
+                .with_sampler(Sampler::ParentBased(Box::new(Sampler::TraceIdRatioBased(
+                    1.0,
+                ))))
+                // If export trace to AWS X-Ray, you can use XrayIdGenerator
+                .with_id_generator(RandomIdGenerator::default())
+                .with_resource(resource()),
+            )
+            .with_batch_config(BatchConfig::default())
+            .with_exporter(opentelemetry_otlp::new_exporter().tonic())
+            .install_batch(runtime::Tokio)
+            .expect("Couldn't create OTLP tracer");
+
+        global::set_tracer_provider(provider.clone());
+        const TRACER_NAME: &str = "tracing-otel-subscriber";
+        provider.tracer(TRACER_NAME)
+    }
+
+    // Create a Resource that captures information about the entity for which telemetry is recorded.
+    fn resource() -> Resource {
+        Resource::from_schema_url(
+            [
+                KeyValue::new(SERVICE_NAME, env!("CARGO_PKG_NAME")),
+                KeyValue::new(SERVICE_VERSION, env!("CARGO_PKG_VERSION")),
+                KeyValue::new(DEPLOYMENT_ENVIRONMENT_NAME, "develop"),
+            ],
+            SCHEMA_URL,
+        )
+    }
+
+    // use opentelemetry::Key;
+    // use opentelemetry_sdk::trace::Tracer;
+    // use opentelemetry_sdk::metrics::{
+    //     reader::{DefaultAggregationSelector, DefaultTemporalitySelector},
+    //     Aggregation, Instrument, MeterProviderBuilder, PeriodicReader, SdkMeterProvider,
+    //     Stream,
+    // };
+    // use tracing_opentelemetry::{MetricsLayer, OpenTelemetryLayer};
+    // use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+    // // Construct MeterProvider for MetricsLayer
+    // fn init_meter_provider() -> SdkMeterProvider {
+    //     let exporter = opentelemetry_otlp::new_exporter()
+    //         .tonic()
+    //         .build_metrics_exporter(
+    //             Box::new(DefaultAggregationSelector::new()),
+    //             Box::new(DefaultTemporalitySelector::new()),
+    //         )
+    //         .unwrap();
+
+    //     let reader = PeriodicReader::builder(exporter, runtime::Tokio)
+    //         .with_interval(std::time::Duration::from_secs(30))
+    //         .build();
+
+    //     // For debugging in development
+    //     let stdout_reader = PeriodicReader::builder(
+    //         opentelemetry_stdout::MetricsExporter::default(),
+    //         runtime::Tokio,
+    //     )
+    //     .build();
+
+    //     // Rename foo metrics to foo_named and drop key_2 attribute
+    //     let view_foo = |instrument: &Instrument| -> Option<Stream> {
+    //         if instrument.name == "foo" {
+    //             Some(
+    //                 Stream::new()
+    //                     .name("foo_named")
+    //                     .allowed_attribute_keys([Key::from("key_1")]),
+    //             )
+    //         } else {
+    //             None
+    //         }
+    //     };
+
+    //     // Set Custom histogram boundaries for baz metrics
+    //     let view_baz =
+    //         |instrument: &Instrument| -> Option<Stream> {
+    //             if instrument.name == "baz" {
+    //                 Some(Stream::new().name("baz").aggregation(
+    //                     Aggregation::ExplicitBucketHistogram {
+    //                         boundaries: vec![0.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0],
+    //                         record_min_max: true,
+    //                     },
+    //                 ))
+    //             } else {
+    //                 None
+    //             }
+    //         };
+
+    //     let meter_provider = MeterProviderBuilder::default()
+    //         .with_resource(resource())
+    //         .with_reader(reader)
+    //         .with_reader(stdout_reader)
+    //         .with_view(view_foo)
+    //         .with_view(view_baz)
+    //         .build();
+
+    //     global::set_meter_provider(meter_provider.clone());
+
+    //     meter_provider
+    // }
 }
 
 fn get_default_filter(level_filter: LevelFilter) -> EnvFilter {

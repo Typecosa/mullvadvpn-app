@@ -6,6 +6,7 @@ use std::{
 };
 use talpid_types::ErrorExt;
 use tokio::{fs, io};
+use tracing::instrument;
 
 /// State to use by default if there is no cache.
 const DEFAULT_TARGET_STATE: TargetState = TargetState::Unsecured;
@@ -20,6 +21,7 @@ pub struct PersistentTargetState {
 
 impl PersistentTargetState {
     /// Initialize using the current target state (if there is one)
+    #[instrument(skip_all)]
     pub async fn new(cache_dir: &Path) -> Self {
         let cache_path = cache_dir.join(TARGET_START_STATE_FILE);
         let TargetStateInner {
@@ -95,6 +97,7 @@ impl PersistentTargetState {
     }
 
     /// Force the initial target state to be 'secured'
+    #[instrument(skip_all)]
     pub async fn new_secured(cache_dir: &Path) -> Self {
         let cache_path = cache_dir.join(TARGET_START_STATE_FILE);
         let state = PersistentTargetState {

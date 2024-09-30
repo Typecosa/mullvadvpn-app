@@ -48,6 +48,7 @@ use talpid_types::{
     net::{AllowedEndpoint, Connectivity, TunnelParameters},
     tunnel::{ErrorStateCause, ParameterGenerationError, TunnelStateTransition},
 };
+use tracing::instrument;
 
 const TUNNEL_STATE_MACHINE_SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(5);
 
@@ -261,6 +262,7 @@ struct TunnelStateMachineInitArgs<G: TunnelParametersGenerator> {
 }
 
 impl TunnelStateMachine {
+    #[instrument(skip_all, "TunnelStateMachine::new")]
     async fn new(
         args: TunnelStateMachineInitArgs<impl TunnelParametersGenerator>,
     ) -> Result<Self, Error> {
@@ -559,6 +561,7 @@ impl SharedTunnelStateValues {
             .map_err(|error| ErrorStateCause::from(&error))
     }
 
+    #[instrument(skip_all)]
     pub fn set_allow_lan(&mut self, allow_lan: bool) -> bool {
         if self.allow_lan != allow_lan {
             self.allow_lan = allow_lan;
@@ -568,6 +571,7 @@ impl SharedTunnelStateValues {
         }
     }
 
+    #[instrument(skip_all)]
     pub fn set_dns_config(&mut self, dns_config: DnsConfig) -> bool {
         if self.dns_config != dns_config {
             self.dns_config = dns_config;
@@ -581,6 +585,7 @@ impl SharedTunnelStateValues {
     /// should always disable it before applying firewall rules. The connectivity check should be
     /// reset whenever the firewall is cleared.
     #[cfg(target_os = "linux")]
+    #[instrument(skip_all)]
     pub fn disable_connectivity_check(&mut self) {
         if self.connectivity_check_was_enabled.is_none() {
             if let Ok(nm) = talpid_dbus::network_manager::NetworkManager::new() {
@@ -593,6 +598,7 @@ impl SharedTunnelStateValues {
 
     /// Reset NetworkManager's connectivity check if it was disabled.
     #[cfg(target_os = "linux")]
+    #[instrument(skip_all)]
     pub fn reset_connectivity_check(&mut self) {
         if self.connectivity_check_was_enabled.take() == Some(true) {
             if let Ok(nm) = talpid_dbus::network_manager::NetworkManager::new() {

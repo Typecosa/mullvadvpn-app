@@ -3,6 +3,7 @@ use std::{collections::HashSet, fmt::Display};
 use crate::settings::{DnsState, Settings};
 use serde::{Deserialize, Serialize};
 use talpid_types::net::{ObfuscationType, TunnelEndpoint, TunnelType};
+use tracing::instrument;
 
 /// Feature indicators are active settings that should be shown to the user to make them aware of
 /// what is affecting their connection at any given time.
@@ -111,6 +112,7 @@ impl std::fmt::Display for FeatureIndicator {
 ///
 /// Server ip override cannot be determined from the settings and endpoint, and has to be fetched
 /// from the relay selector parameter generator.
+#[instrument(skip_all)]
 pub fn compute_feature_indicators(
     settings: &Settings,
     endpoint: &TunnelEndpoint,

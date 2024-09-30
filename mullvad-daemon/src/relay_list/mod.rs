@@ -10,6 +10,7 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 use tokio::fs::File;
+use tracing::instrument;
 
 use mullvad_api::{availability::ApiAvailability, rest::MullvadRestHandle, RelayListProxy};
 use mullvad_relay_selector::RelaySelector;
@@ -72,6 +73,7 @@ pub struct RelayListUpdater {
 }
 
 impl RelayListUpdater {
+    #[instrument(skip_all, name = "RelayListUpdater::spawn", fields(cache_path = %cache_dir.display()))]
     pub fn spawn(
         selector: RelaySelector,
         api_handle: MullvadRestHandle,

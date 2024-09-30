@@ -19,6 +19,7 @@ use mullvad_types::{
     relay_constraints::RelayOverride,
     relay_list::{Relay, RelayList},
 };
+use tracing::{info_span, instrument};
 
 use crate::{constants::UDP2TCP_PORTS, error::Error};
 
@@ -87,9 +88,10 @@ impl ParsedRelays {
     }
 
     /// Try to read the relays from disk, preferring the newer ones.
+    #[instrument(skip_all, name = "ParsedRelays::from_file")]
     pub(crate) fn from_file(
-        cache_path: impl AsRef<Path>,
-        resource_path: impl AsRef<Path>,
+        cache_path: impl AsRef<Path> + std::fmt::Debug,
+        resource_path: impl AsRef<Path> + std::fmt::Debug,
         overrides: &[RelayOverride],
     ) -> Result<Self, Error> {
         // prefer the resource path's relay list if the cached one doesn't exist or was modified
@@ -114,15 +116,19 @@ impl ParsedRelays {
         }
     }
 
+    #[instrument(skip_all, err)]
     fn from_file_inner(path: impl AsRef<Path>, overrides: &[RelayOverride]) -> Result<Self, Error> {
         log::debug!("Reading relays from {}", path.as_ref().display());
         let (last_modified, file) =
             Self::open_file(path.as_ref()).map_err(Error::OpenRelayCache)?;
-        let relay_list = serde_json::from_reader(BufReader::new(file)).map_err(Error::Serialize)?;
+        let relay_list = info_span!("serde_json::from_reader", path = %path.as_ref().display())
+            .in_scope(|| serde_json::from_reader(BufReader::new(file)))
+            .map_err(Error::Serialize)?;
 
         Ok(Self::from_relay_list(relay_list, last_modified, overrides))
     }
 
+    #[instrument(skip_all, err)]
     fn open_file(path: &Path) -> io::Result<(SystemTime, std::fs::File)> {
         let file = std::fs::File::open(path)?;
         let last_modified = file.metadata()?.modified()?;
@@ -147,6 +153,7 @@ impl ParsedRelays {
 
     /// Apply [overrides][`RelayOverride`] to [relay_list][`RelayList`], yielding an updated relay
     /// list.
+    #[instrument(skip_all)]
     fn parse_relay_list(relay_list: &RelayList, overrides: &[RelayOverride]) -> RelayList {
         let mut remaining_overrides = HashMap::new();
         for relay_override in overrides {

@@ -25,6 +25,7 @@ use talpid_types::{
     tunnel::{ErrorStateCause, FirewallPolicyError},
     ErrorExt,
 };
+use tracing::{instrument, Instrument};
 
 #[cfg(target_os = "android")]
 use talpid_tunnel::tun_provider;
@@ -53,6 +54,7 @@ pub struct ConnectingState {
 }
 
 impl ConnectingState {
+    #[instrument(name = "ConnectingState::enter", skip(shared_values))]
     pub(super) fn enter(
         shared_values: &mut SharedTunnelStateValues,
         retry_attempt: u32,
@@ -132,6 +134,7 @@ impl ConnectingState {
         }
     }
 
+    #[instrument(name = "ConnectingState::set_firewall_policy", skip_all)]
     fn set_firewall_policy(
         shared_values: &mut SharedTunnelStateValues,
         params: &TunnelParameters,
@@ -193,6 +196,7 @@ impl ConnectingState {
             })
     }
 
+    #[instrument(name = "ConnectingState::start_tunnel", skip_all)]
     fn start_tunnel(
         runtime: tokio::runtime::Handle,
         parameters: TunnelParameters,
@@ -307,6 +311,7 @@ impl ConnectingState {
         }
     }
 
+    #[instrument(name = "ConnectingState::wait_for_tunnel_monitor", skip_all)]
     fn wait_for_tunnel_monitor(
         tunnel_monitor: TunnelMonitor,
         retry_attempt: u32,
@@ -340,6 +345,7 @@ impl ConnectingState {
         }
     }
 
+    #[instrument(name = "ConnectingState::reset_routes", skip_all)]
     fn reset_routes(
         #[cfg(target_os = "windows")] shared_values: &SharedTunnelStateValues,
         #[cfg(not(target_os = "windows"))] shared_values: &mut SharedTunnelStateValues,
@@ -359,6 +365,7 @@ impl ConnectingState {
         }
     }
 
+    #[instrument(name = "ConnectingState::disconnect", skip_all)]
     fn disconnect(
         self,
         shared_values: &mut SharedTunnelStateValues,
@@ -392,6 +399,7 @@ impl ConnectingState {
         }
     }
 
+    #[instrument(name = "ConnectingState::handle_commands", skip_all)]
     fn handle_commands(
         self: Box<Self>,
         command: Option<TunnelCommand>,
@@ -671,8 +679,6 @@ fn should_retry(error: &tunnel::Error, retry_attempt: u32) -> bool {
 }
 
 impl TunnelState for ConnectingState {
-    // #[tracing::instrument(skip_all, name = "Connecting", fields(tunnel_parameters =
-    // %self.tunnel_parameters))]
     #[tracing::instrument(skip_all, name = "Connecting")]
     fn handle_event(
         mut self: Box<Self>,
@@ -680,13 +686,16 @@ impl TunnelState for ConnectingState {
         commands: &mut TunnelCommandReceiver,
         shared_values: &mut SharedTunnelStateValues,
     ) -> EventConsequence {
-        let result = runtime.block_on(async {
-            futures::select! {
-                command = commands.next() => EventResult::Command(command),
-                event = self.tunnel_events.next() => EventResult::Event(event),
-                result = &mut self.tunnel_close_event => EventResult::Close(result),
+        let result = runtime.block_on(
+            async {
+                futures::select! {
+                    command = commands.next() => EventResult::Command(command),
+                    event = self.tunnel_events.next() => EventResult::Event(event),
+                    result = &mut self.tunnel_close_event => EventResult::Close(result),
+                }
             }
-        });
+            .instrument(tracing::info_span!("waiting for event")),
+        );
 
         match result {
             EventResult::Command(command) => self.handle_commands(command, shared_values),

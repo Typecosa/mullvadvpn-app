@@ -4,6 +4,7 @@ use std::{
     time::Duration,
 };
 use tokio::sync::broadcast;
+use tracing::instrument;
 
 /// Pause background requests if [ApiAvailabilityHandle::reset_inactivity_timer] hasn't been
 /// called for this long.
@@ -97,16 +98,19 @@ impl ApiAvailability {
             inner.resume_background();
             inner.inactivity_timer_running()
         };
-        // Note: It is important that we do not hold on to the Mutex when calling `reset_inactivity_timer()`.
+        // Note: It is important that we do not hold on to the Mutex when calling
+        // `reset_inactivity_timer()`.
         if should_reset {
             self.reset_inactivity_timer();
         }
     }
 
+    #[instrument(skip_all, level = "debug", name = "ApiAvailability::suspend")]
     pub fn suspend(&self) {
         self.acquire().suspend()
     }
 
+    #[instrument(skip_all, level = "debug", name = "ApiAvailability::unsuspend")]
     pub fn unsuspend(&self) {
         self.acquire().unsuspend();
     }
@@ -275,8 +279,8 @@ mod test {
     /// Use mockable time for tests
     pub use tokio::time::Duration;
 
-    // Note that all of these tests needs a tokio runtime. Creating an instance of [`ApiAvailability`] will implicitly
-    // spawn a tokio task.
+    // Note that all of these tests needs a tokio runtime. Creating an instance of
+    // [`ApiAvailability`] will implicitly spawn a tokio task.
 
     /// Test that the inactivity timer starts in an expected state.
     #[tokio::test(start_paused = true)]

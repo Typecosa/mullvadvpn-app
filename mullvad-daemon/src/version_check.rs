@@ -21,6 +21,7 @@ use talpid_core::mpsc::Sender;
 use talpid_future::retry::{retry_future, ConstantInterval};
 use talpid_types::ErrorExt;
 use tokio::{fs::File, io::AsyncReadExt};
+use tracing::instrument;
 
 const VERSION_INFO_FILENAME: &str = "version-info.json";
 
@@ -147,6 +148,7 @@ impl VersionUpdaterHandle {
 }
 
 impl VersionUpdater {
+    #[instrument(skip_all, name = "VersionUpdater::spawn", fields(cache_path = %cache_dir.display()))]
     pub async fn spawn(
         mut api_handle: MullvadRestHandle,
         availability_handle: ApiAvailability,
@@ -481,6 +483,7 @@ fn do_version_check_in_background(
 ///
 /// Returns the [AppVersionInfo] along with the modification time of the cache file,
 /// or `None` on any error.
+#[instrument]
 async fn load_cache(cache_dir: &Path) -> Option<(AppVersionInfo, SystemTime)> {
     try_load_cache(cache_dir)
         .await

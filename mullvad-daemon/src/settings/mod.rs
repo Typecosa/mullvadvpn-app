@@ -15,6 +15,7 @@ use tokio::{
     fs,
     io::{self, AsyncWriteExt},
 };
+use tracing::instrument;
 
 pub mod patch;
 
@@ -100,6 +101,7 @@ pub type MadeChanges = bool;
 
 impl SettingsPersister {
     /// Loads user settings from file. If it fails, it returns the defaults.
+    #[instrument(skip_all)]
     pub async fn load(settings_dir: &Path) -> Self {
         let path = settings_dir.join(SETTINGS_FILE);
         let LoadSettingsResult {
@@ -146,6 +148,7 @@ impl SettingsPersister {
     /// `load_inner` will always succeed, even in the presence of IO operations.
     /// Errors are handled gracefully by returning the default [`Settings`] if
     /// necessary.
+    #[instrument(skip_all)]
     async fn load_inner<F, R>(load_settings: F) -> LoadSettingsResult
     where
         F: FnOnce() -> R,
@@ -182,6 +185,7 @@ impl SettingsPersister {
         }
     }
 
+    #[instrument(skip_all)]
     async fn load_from_file<P>(path: P) -> Result<Settings, Error>
     where
         P: AsRef<Path> + Clone,
@@ -199,6 +203,7 @@ impl SettingsPersister {
         serde_json::from_slice(bytes).map_err(Error::ParseError)
     }
 
+    #[instrument(skip_all)]
     async fn save(&mut self) -> Result<(), Error> {
         Self::save_inner(&self.path, &self.settings).await
     }
@@ -222,6 +227,7 @@ impl SettingsPersister {
     }
 
     /// Resets default settings
+    #[instrument(skip_all)]
     pub async fn reset(&mut self) -> Result<(), Error> {
         self.settings = Self::default_settings();
         let path = self.path.clone();
@@ -272,6 +278,7 @@ impl SettingsPersister {
     /// # Note
     ///
     /// If no settings were changed, no I/O will be performed.
+    #[instrument(skip_all)]
     pub async fn update(
         &mut self,
         update_fn: impl FnOnce(&mut Settings),
@@ -322,6 +329,7 @@ impl SettingsPersister {
     /// matches!(err, Error::UpdateFailed(_)) ;
     /// assert_eq!(settings, Settings::default_settings())
     /// ```
+    #[instrument(skip_all)]
     pub async fn try_update<E>(
         &mut self,
         update_fn: impl FnOnce(&mut Settings) -> Result<(), E>,
@@ -361,6 +369,7 @@ impl SettingsPersister {
         self.on_change_listeners.push(Box::new(change_listener));
     }
 
+    #[instrument(skip_all)]
     fn notify_listeners(&self) {
         for listener in &self.on_change_listeners {
             listener(&self.settings);

@@ -15,6 +15,7 @@ use std::{
     sync::{Arc, LazyLock, Mutex},
     time::SystemTime,
 };
+use tracing::instrument;
 
 use mullvad_types::{
     constraints::Constraint,
@@ -411,10 +412,11 @@ impl<'a> TryFrom<NormalSelectorConfig<'a>> for RelayQuery {
 
 impl RelaySelector {
     /// Returns a new `RelaySelector` backed by relays cached on disk.
+    #[instrument(skip_all, name = "RelaySelector::new")]
     pub fn new(
         config: SelectorConfig,
-        resource_path: impl AsRef<Path>,
-        cache_path: impl AsRef<Path>,
+        resource_path: impl AsRef<Path> + std::fmt::Debug,
+        cache_path: impl AsRef<Path> + std::fmt::Debug,
     ) -> Self {
         const DATE_TIME_FORMAT_STR: &str = "%Y-%m-%d %H:%M:%S%.3f";
         let unsynchronized_parsed_relays =

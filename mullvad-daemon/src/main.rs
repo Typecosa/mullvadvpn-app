@@ -6,6 +6,7 @@ use mullvad_daemon::{
     logging, rpc_uniqueness_check, runtime, version, Daemon, DaemonCommandChannel,
 };
 use talpid_types::ErrorExt;
+use tracing::instrument;
 
 mod cli;
 #[cfg(target_os = "linux")]
@@ -197,6 +198,7 @@ async fn run_standalone(
     Ok(())
 }
 
+#[instrument(skip_all)]
 async fn create_daemon(
     log_dir: Option<PathBuf>,
     log_reload_handle: logging::LogHandle,

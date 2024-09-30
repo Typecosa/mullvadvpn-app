@@ -6,6 +6,7 @@ use tokio::{
     fs,
     io::{self, AsyncReadExt, AsyncSeekExt, AsyncWriteExt},
 };
+use tracing::instrument;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -34,6 +35,7 @@ pub struct AccountHistory {
 static ACCOUNT_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[0-9]+$").unwrap());
 
 impl AccountHistory {
+    #[instrument(skip_all)]
     pub async fn new(
         settings_dir: &Path,
         current_token: Option<AccountToken>,

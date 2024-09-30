@@ -1,6 +1,7 @@
 use crate::Result;
 use std::{env, path::PathBuf};
 
+#[tracing::instrument]
 /// Creates and returns the settings directory pointed to by `MULLVAD_SETTINGS_DIR`, or the default
 /// one if that variable is unset.
 pub fn settings_dir() -> Result<PathBuf> {

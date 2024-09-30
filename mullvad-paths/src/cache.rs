@@ -1,6 +1,7 @@
 use crate::Result;
 use std::{env, path::PathBuf};
 
+#[tracing::instrument]
 /// Creates and returns the cache directory pointed to by `MULLVAD_CACHE_DIR`, or the default
 /// one if that variable is unset.
 pub fn cache_dir() -> Result<PathBuf> {

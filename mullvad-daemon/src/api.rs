@@ -24,6 +24,7 @@ use talpid_core::mpsc::Sender;
 use talpid_types::net::{
     AllowedClients, AllowedEndpoint, Connectivity, Endpoint, TransportProtocol,
 };
+use tracing::instrument;
 
 pub enum Message {
     Get(ResponseTx<ResolvedConnectionMode>),
@@ -249,6 +250,7 @@ pub struct AccessModeSelector {
 }
 
 impl AccessModeSelector {
+    #[instrument(skip_all, name = "AccessModeSelector::spawn")]
     pub(crate) async fn spawn(
         cache_dir: PathBuf,
         relay_selector: RelaySelector,
@@ -579,6 +581,7 @@ pub fn allowed_clients(connection_mode: &ApiConnectionMode) -> AllowedClients {
 }
 
 /// Forwards the received values from `offline_state_rx` to the [`ApiAvailability`].
+#[instrument(skip_all)]
 pub(crate) fn forward_offline_state(
     api_availability: ApiAvailability,
     mut offline_state_rx: mpsc::UnboundedReceiver<Connectivity>,

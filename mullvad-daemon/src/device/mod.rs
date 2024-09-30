@@ -14,6 +14,7 @@ use mullvad_types::{
     },
     wireguard::{self, RotationInterval, WireguardData},
 };
+use tracing::instrument;
 
 use std::{
     future::Future,
@@ -236,7 +237,7 @@ impl From<PrivateDevice> for Device {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) enum AccountEvent {
     /// Emitted when the device state changes.
     Device(PrivateDeviceEvent),
@@ -244,7 +245,7 @@ pub(crate) enum AccountEvent {
     Expiry(DateTime<Utc>),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) enum PrivateDeviceEvent {
     /// Logged in on a new device.
     Login(PrivateAccountAndDevice),
@@ -417,6 +418,7 @@ pub(crate) struct AccountManager {
 impl AccountManager {
     /// Starts the account manager actor and returns a handle to it as well as the
     /// current device.
+    #[instrument(skip_all, name = "AccountManager::spawn")]
     pub async fn spawn(
         rest_handle: rest::MullvadRestHandle,
         settings_dir: &Path,
@@ -1258,6 +1260,7 @@ impl TunnelStateChangeHandler {
 
     /// Handle state transitions and optionally check the device/account validity. This should be
     /// called during every tunnel state transition.
+    #[instrument(skip_all)]
     pub fn handle_state_transition(&mut self, new_state: &TunnelStateTransition) {
         self.wg_retry_attempt = Self::update_retry_counter(new_state, self.wg_retry_attempt);
         Self::update_retry_bool(new_state, self.can_retry.clone());

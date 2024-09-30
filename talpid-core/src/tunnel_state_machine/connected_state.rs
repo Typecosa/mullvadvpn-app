@@ -18,6 +18,7 @@ use talpid_types::{
     tunnel::{ErrorStateCause, FirewallPolicyError},
     BoxedError, ErrorExt,
 };
+use tracing::{instrument, Instrument};
 
 #[cfg(windows)]
 use crate::tunnel::TunnelMonitor;
@@ -205,6 +206,7 @@ impl ConnectedState {
         ))
     }
 
+    #[instrument(name = "ConnectedState::handle_commands", skip_all)]
     fn handle_commands(
         self: Box<Self>,
         command: Option<TunnelCommand>,
@@ -438,13 +440,16 @@ impl TunnelState for ConnectedState {
         commands: &mut TunnelCommandReceiver,
         shared_values: &mut SharedTunnelStateValues,
     ) -> EventConsequence {
-        let result = runtime.block_on(async {
-            futures::select! {
-                command = commands.next() => EventResult::Command(command),
-                event = self.tunnel_events.next() => EventResult::Event(event),
-                result = &mut self.tunnel_close_event => EventResult::Close(result),
+        let result = runtime.block_on(
+            async {
+                futures::select! {
+                    command = commands.next() => EventResult::Command(command),
+                    event = self.tunnel_events.next() => EventResult::Event(event),
+                    result = &mut self.tunnel_close_event => EventResult::Close(result),
+                }
             }
-        });
+            .instrument(tracing::info_span!("waiting for event")),
+        );
 
         match result {
             EventResult::Command(command) => self.handle_commands(command, shared_values),

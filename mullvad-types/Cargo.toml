@@ -16,6 +16,7 @@ chrono = { workspace = true, features = ["clock", "serde"] }
 thiserror = { workspace = true }
 ipnetwork = { workspace = true }
 log = { workspace = true }
+tracing = { workspace = true }
 regex = "1"
 serde = { workspace = true, features = ["derive"] }
 uuid = { version = "1.4.1", features = ["v4", "serde" ] }

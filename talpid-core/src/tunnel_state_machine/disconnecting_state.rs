@@ -5,6 +5,7 @@ use super::{
 };
 use futures::{channel::oneshot, future::FusedFuture, StreamExt};
 use talpid_types::tunnel::{ActionAfterDisconnect, ErrorStateCause};
+use tracing::{instrument, Instrument};
 
 /// This state is active from when we manually trigger a tunnel kill until the tunnel wait
 /// operation (TunnelExit) returned.
@@ -31,6 +32,7 @@ impl DisconnectingState {
         )
     }
 
+    #[instrument(name = "DisconnectingState::handle_commands", skip_all)]
     fn handle_commands(
         mut self: Box<Self>,
         command: Option<TunnelCommand>,
@@ -269,12 +271,15 @@ impl TunnelState for DisconnectingState {
                 EventResult::Close(Ok(None))
             }
         } else {
-            runtime.block_on(async {
-                futures::select! {
-                    command = commands.next() => EventResult::Command(command),
-                    result = &mut self.tunnel_close_event => EventResult::Close(result),
+            runtime.block_on(
+                async {
+                    futures::select! {
+                        command = commands.next() => EventResult::Command(command),
+                        result = &mut self.tunnel_close_event => EventResult::Close(result),
+                    }
                 }
-            })
+                .instrument(tracing::info_span!("waiting for event")),
+            )
         };
 
         match result {

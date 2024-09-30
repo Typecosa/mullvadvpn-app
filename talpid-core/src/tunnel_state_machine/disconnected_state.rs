@@ -11,6 +11,7 @@ use std::net::Ipv4Addr;
 #[cfg(target_os = "macos")]
 use talpid_types::tunnel::ErrorStateCause;
 use talpid_types::ErrorExt;
+use tracing::Instrument;
 
 /// No tunnel is running.
 pub struct DisconnectedState(());
@@ -150,7 +151,11 @@ impl TunnelState for DisconnectedState {
     ) -> EventConsequence {
         use self::EventConsequence::*;
 
-        match runtime.block_on(commands.next()) {
+        match runtime.block_on(
+            commands
+                .next()
+                .instrument(tracing::info_span!("waiting for event")),
+        ) {
             Some(TunnelCommand::AllowLan(allow_lan, complete_tx)) => {
                 if shared_values.set_allow_lan(allow_lan) {
                     Self::set_firewall_policy(shared_values, false);

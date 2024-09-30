@@ -22,6 +22,7 @@ use talpid_types::net::{
 };
 #[cfg(target_os = "android")]
 use talpid_types::net::{obfuscation::ObfuscatorConfig, wireguard, TunnelParameters};
+use tracing::instrument;
 
 use talpid_types::{tunnel::ParameterGenerationError, ErrorExt};
 
@@ -83,6 +84,7 @@ impl ParametersGenerator {
     }
 
     /// Sets the tunnel options to use when generating new tunnel parameters.
+    #[instrument(skip_all)]
     pub async fn set_tunnel_options(&self, tunnel_options: &TunnelOptions) {
         self.0.lock().await.tunnel_options = tunnel_options.clone();
     }
@@ -104,6 +106,7 @@ impl ParametersGenerator {
     }
 
     /// Gets the location associated with the last generated tunnel parameters.
+    #[instrument(skip_all)]
     pub async fn get_last_location(&self) -> Option<GeoIpLocation> {
         let inner = self.0.lock().await;
 

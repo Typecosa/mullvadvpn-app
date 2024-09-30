@@ -19,6 +19,7 @@ use std::{
     sync::OnceLock,
 };
 use talpid_types::ErrorExt;
+use tracing::instrument;
 
 pub mod availability;
 use availability::ApiAvailability;
@@ -359,6 +360,7 @@ impl Runtime {
 
     /// Create a new `Runtime` using the specified directories.
     /// Try to use the cache directory first, and fall back on the bundled address otherwise.
+    #[instrument(skip_all)]
     pub async fn with_cache(
         cache_dir: &Path,
         write_changes: bool,
@@ -425,6 +427,7 @@ impl Runtime {
     }
 
     /// Returns a request factory initialized to create requests for the master API
+    #[instrument(skip_all)]
     pub fn mullvad_rest_handle<T: ConnectionModeProvider + 'static>(
         &self,
         connection_mode_provider: T,
@@ -488,6 +491,7 @@ impl AccountsProxy {
         Self { handle }
     }
 
+    #[instrument(skip_all)]
     pub fn get_data(
         &self,
         account: AccountToken,
@@ -504,6 +508,7 @@ impl AccountsProxy {
         }
     }
 
+    #[instrument(skip_all)]
     pub fn create_account(&self) -> impl Future<Output = Result<AccountToken, rest::Error>> {
         #[derive(serde::Deserialize)]
         struct AccountCreationResponse {
@@ -523,6 +528,7 @@ impl AccountsProxy {
         }
     }
 
+    #[instrument(skip_all)]
     pub fn submit_voucher(
         &self,
         account: AccountToken,
@@ -614,6 +620,7 @@ impl AccountsProxy {
         }
     }
 
+    #[instrument(skip_all)]
     pub fn get_www_auth_token(
         &self,
         account: AccountToken,
@@ -700,6 +707,7 @@ impl AppVersionProxy {
         Self { handle }
     }
 
+    #[instrument(skip_all)]
     pub fn version_check(
         &self,
         app_version: AppVersion,
@@ -731,6 +739,7 @@ impl ApiProxy {
         Self { handle }
     }
 
+    #[instrument(skip_all)]
     pub async fn get_api_addrs(&self) -> Result<Vec<SocketAddr>, rest::Error> {
         let request = self
             .handle
@@ -742,6 +751,7 @@ impl ApiProxy {
     }
 
     /// Check the availablility of `{APP_URL_PREFIX}/api-addrs`.
+    #[instrument(skip_all)]
     pub async fn api_addrs_available(&self) -> Result<bool, rest::Error> {
         let request = self
             .handle
