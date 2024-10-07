@@ -221,7 +221,7 @@ fn start_logging_inner(log_dir: &Path) -> Result<(), logging::Error> {
     let log_file = log_dir.join(LOG_FILENAME);
 
     logging::init_logger(log::LevelFilter::Debug, Some(&log_file), true)?;
-    exception_logging::enable();
+    //exception_logging::enable();
     log_panics::init();
 
     Ok(())
