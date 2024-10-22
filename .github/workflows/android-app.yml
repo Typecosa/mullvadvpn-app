@@ -247,7 +247,7 @@ jobs:
           submodules: true
 
       - name: Runt lint and checks
-        uses: ./.github/actions/android-run-lint-and-tests
+        uses: ./.github/actions/android-run-lint-and-checks
         with:
           check_type: ${{ matrix.check-type }}
 
