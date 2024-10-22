@@ -51,7 +51,22 @@ class SettingsMigrationTests: BaseUITestCase {
             .tapDoneButton()
     }
 
-    func testChangeSettings() {
+    func testVerifyCustomDNSSettingsStillChanged() {
+        HeaderBar(app)
+            .tapSettingsButton()
+
+        SettingsPage(app)
+            .tapVPNSettingsCell()
+
+        VPNSettingsPage(app)
+            .tapDNSSettingsCell()
+
+        DNSSettingsPage(app)
+            .verifyUseCustomDNSSwitchOn()
+            .verifyCustomDNSIPAddress(customDNSServerIPAddress)
+    }
+
+    func testChangeVPNSettings() {
         logoutIfLoggedIn()
         login(accountNumber: hasTimeAccountNumber)
 
@@ -86,21 +101,6 @@ class SettingsMigrationTests: BaseUITestCase {
             .tapUDPOverTCPPortExpandButton()
             .tapUDPOverTCPPort80Cell()
             .tapUDPOverTCPPortExpandButton()
-    }
-
-    func testVerifyCustomDNSSettingsStillChanged() {
-        HeaderBar(app)
-            .tapSettingsButton()
-
-        SettingsPage(app)
-            .tapVPNSettingsCell()
-
-        VPNSettingsPage(app)
-            .tapDNSSettingsCell()
-
-        DNSSettingsPage(app)
-            .verifyUseCustomDNSSwitchOn()
-            .verifyCustomDNSIPAddress(customDNSServerIPAddress)
     }
 
     func testVerifySettingsStillChanged() {

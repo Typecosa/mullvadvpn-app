@@ -449,6 +449,7 @@ final class VPNSettingsDataSource: UITableViewDiffableDataSource<
         header.accessibilityIdentifier = .wireGuardPortsCell
         header.titleLabel.text = title
         header.accessibilityCustomActionName = title
+        header.isExpanded = isExpanded(.wireGuardPorts)
         header.infoButtonHandler = { [weak self] in
             if let self {
                 self.delegate?.showInfo(for: .wireGuardPorts)
@@ -492,6 +493,7 @@ final class VPNSettingsDataSource: UITableViewDiffableDataSource<
         header.accessibilityIdentifier = .wireGuardObfuscationCell
         header.titleLabel.text = title
         header.accessibilityCustomActionName = title
+        header.isExpanded = isExpanded(.wireGuardObfuscation)
         header.didCollapseHandler = { [weak self] header in
             guard let self else { return }
 
@@ -521,6 +523,7 @@ final class VPNSettingsDataSource: UITableViewDiffableDataSource<
         header.accessibilityIdentifier = .udpOverTCPPortCell
         header.titleLabel.text = title
         header.accessibilityCustomActionName = title
+        header.isExpanded = isExpanded(.wireGuardObfuscationPort)
         header.didCollapseHandler = { [weak self] header in
             guard let self else { return }
 
@@ -551,6 +554,7 @@ final class VPNSettingsDataSource: UITableViewDiffableDataSource<
         header.accessibilityIdentifier = .quantumResistantTunnelCell
         header.titleLabel.text = title
         header.accessibilityCustomActionName = title
+        header.isExpanded = isExpanded(.quantumResistance)
         header.didCollapseHandler = { [weak self] header in
             guard let self else { return }
 
@@ -586,6 +590,15 @@ final class VPNSettingsDataSource: UITableViewDiffableDataSource<
         }
 
         return nil
+    }
+
+    /*
+      Since we are dequeuing headers, it's crucial to maintain the state of expansion.
+      Using screenshots as a single source of truth to capture the state allows us to determine whether headers are expanded or not.
+     */
+    private func isExpanded(_ section: Section) -> Bool {
+        let snapshot = snapshot()
+        return snapshot.numberOfItems(inSection: section) != 0
     }
 }
 
