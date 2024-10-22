@@ -1,0 +1,47 @@
+---
+name: Run lint and checks
+description: Runs lint and checks for Android
+inputs:
+  check_type:
+    description: 'Type of lint/check(lint, detekt, arch-test, unit-test)'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Select gradle task
+      run: |
+        if [ "$CHECK_TYPE" == "lint" ]; then
+          GRADLE_TASK="lint"
+        elif [ "$CHECK_TYPE" == "detekt" ]; then
+          GRADLE_TASK="detekt"
+        elif [ "$CHECK_TYPE" == "arch-test" ]; then
+          GRADLE_TASK=":test:architecture:test"
+        elif [ "$CHECK_TYPE" == "unit-test" ]; then
+          GRADLE_TASK="testDebugUnitTest -x :test:arch:testDebugUnitTest
+              :app:testOssProdDebugUnitTest
+              :service:testOssProdDebugUnitTest
+              :lib:billing:testDebugUnitTest
+              :lib:daemon-grpc:testDebugUnitTest
+              :lib:shared:testDebugUnitTest"
+        else
+          echo "Invalid check type"
+          exit 1
+        fi
+
+        echo "Gradle task: $GRADLE_TASK"
+        echo "GRADLE_TASK=$GRADLE_TASK" >> $GITHUB_ENV
+      env:
+        CHECK_TYPE: ${{ inputs.check_type }}
+
+    - name: Run lint and tests
+      uses: burrunan/gradle-cache-action@v1
+      with:
+        job-id: jdk17
+        arguments: ${{ env.GRADLE_TASK }}
+        gradle-version: wrapper
+        build-root-directory: android
+        execution-only-caches: false
+        # Disable if logs are hard to follow.
+        concurrent: true
+        read-only: ${{ github.ref != 'refs/heads/main' }}

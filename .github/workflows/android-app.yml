@@ -231,16 +231,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - gradle-task: |
-              testDebugUnitTest -x :test:arch:testDebugUnitTest
-              :app:testOssProdDebugUnitTest
-              :service:testOssProdDebugUnitTest
-              :lib:billing:testDebugUnitTest
-              :lib:daemon-grpc:testDebugUnitTest
-              :lib:shared:testDebugUnitTest
-          - gradle-task: :test:arch:test --rerun-tasks
-          - gradle-task: detekt
-          - gradle-task: lint
+          - check-type: unit-test
+          - check-type: arch-test
+          - check-type: detekt
+          - check-type: lint
     steps:
       # Fix for HOME path overridden by GH runners when building in containers, see:
       # https://github.com/actions/runner/issues/863
@@ -252,17 +246,10 @@ jobs:
         with:
           submodules: true
 
-      - name: Run gradle task
-        uses: burrunan/gradle-cache-action@v1
+      - name: Runt lint and checks
+        uses: ./.github/actions/android-run-lint-and-tests
         with:
-          job-id: jdk17
-          arguments: ${{ matrix.gradle-task }}
-          gradle-version: wrapper
-          build-root-directory: android
-          execution-only-caches: false
-          # Disable if logs are hard to follow.
-          concurrent: true
-          read-only: ${{ github.ref != 'refs/heads/main' }}
+          check_type: ${{ matrix.check-type }}
 
   build-app:
     name: Build app
